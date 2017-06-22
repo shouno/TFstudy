@@ -1,18 +1,21 @@
+import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
+
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
-import tensorflow as tf
 
 def conv2d(x, W):
     return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
+
 def maxpool2x2(x):
-    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
-                            strides=[1, 2, 2, 1], padding='SAME')
+    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+
 
 def weight_variable(shape):
     initial = tf.truncated_normal(shape, stddev=0.1)
     return tf.Variable(initial)
+
 
 def bias_variable(shape):
     initial = tf.constant(0.1, shape=shape)
@@ -41,25 +44,27 @@ b_fc2 = tf.Variable(tf.zeros([10]))
 y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 
 y_ = tf.placeholder(tf.float32, [None, 10])
-cross_entropy = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
+cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
 
 train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 
-correct_pred = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
+correct_pred = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 acc = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 init = tf.global_variables_initializer()
 
+
+saver = tf.train.Saver()
 sess = tf.Session()
 sess.run(init)
 
 for i in range(20000):
     batch_xs, batch_ys = mnist.train.next_batch(50)
-    if i%100 == 0:
-        tr_acc = acc.eval(session=sess, feed_dict={x: batch_xs, y_:batch_ys, keep_prob: 1.0})
+    if i % 100 == 0:
+        tr_acc = acc.eval(session=sess, feed_dict={x: batch_xs, y_: batch_ys, keep_prob: 1.0})
         print "step %d: train acc=%g" % (i, tr_acc)
+        saver.save(sess, 'convNet', global_step=i)
     sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys, keep_prob: 0.5})
 
-correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
+correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 print(sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels}))
