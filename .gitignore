@@ -1,4 +1,4 @@
-MNIST_Data/
-logdata/
+MNIST_data/
+logdata/*
 *.pyc
 
